@@ -65,7 +65,7 @@ ASSIGNMENT.md               # Full brief — read this first
 | `DELETE` | `/tasks/:id`              | Delete a task (returns 204)              |
 | `PATCH`  | `/tasks/:id/complete`     | Mark a task as complete                  |
 | `GET`    | `/tasks/stats`            | Counts by status + overdue count         |
-| `PATCH`  | `/tasks/:id/assign`       | **Assign a task to a user** _(to implement)_ |
+| `PATCH`  | `/tasks/:id/assign`       | **Assign a task to a user**              |
 
 ### Task shape
 
@@ -111,3 +111,46 @@ See [ASSIGNMENT.md](./ASSIGNMENT.md) for full submission requirements. At minimu
 - **Bug report** — what you found, where in the code, and why it's a bug (not just symptoms)
 - **At least one fix** — with a note on your approach
 - **`PATCH /tasks/:id/assign` implementation** — plus a short explanation of any design decisions (validation, edge cases, etc.)
+
+---
+
+# Assignment Submission Notes
+
+## Completed Work
+
+- Added unit tests using Jest for the service layer.
+- Added integration tests using Supertest for the API endpoints.
+- Achieved more than 80% test coverage for statements, lines, and functions.
+- Identified multiple bugs and documented them in `BUG_REPORT.md`.
+- Fixed the pagination offset bug.
+- Implemented `PATCH /tasks/:id/assign`.
+- Added validation and tests for the new endpoint.
+
+## Design Decisions
+
+### PATCH /tasks/:id/assign
+
+- Returns **404** if the task does not exist.
+- Returns **400** if `assignee` is missing or is an empty string.
+- Stores the assignee on the existing task object without modifying other task fields.
+
+## What I'd Test Next
+
+If I had more time, I would add tests for:
+
+- Invalid pagination values.
+- Concurrent updates on the same task.
+- Multiple assignment scenarios.
+- Performance with a large number of tasks.
+- Additional edge cases for validation.
+
+## What Surprised Me
+
+The project had no automated tests despite exposing several API endpoints. Writing tests helped identify issues in the existing implementation and increased confidence while adding the new feature.
+
+## Questions Before Shipping to Production
+
+- Should completed tasks be allowed to be reassigned?
+- Should invalid pagination values return `400 Bad Request` instead of default values?
+- Should deleting a task be permanent or a soft delete?
+- Should task updates support optimistic locking to prevent concurrent modification?
