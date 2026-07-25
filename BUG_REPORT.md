@@ -2,29 +2,33 @@
 
 ## Overview
 
-While testing the Task Manager API, I identified the following issues.
+While testing and reviewing the Task Manager API, I identified the following issues. I wrote unit and integration tests using Jest and Supertest to validate the application behavior. One bug was fixed as part of this assignment, while the remaining issues are documented with suggested fixes.
 
 ---
 
 ## Bug 1: Incorrect Pagination Offset (Fixed)
 
-**Location**
+### Location
 `src/services/taskService.js`
 
-**Expected Behavior**
+### Expected Behavior
 Requesting `page=1&limit=10` should return the first 10 tasks.
 
-**Actual Behavior**
-The API skipped the first 10 tasks because the offset was calculated as:
+### Actual Behavior
+The API skipped the first 10 tasks because the pagination offset was calculated incorrectly.
+
+### Root Cause
 
 ```javascript
 const offset = page * limit;
 ```
 
-**How I Discovered It**
-I wrote a unit test for pagination using Jest. The test failed because page 1 started from Task 11 instead of Task 1.
+For `page=1` and `limit=10`, the offset becomes `10` instead of `0`.
 
-**Fix Implemented**
+### How I Discovered It
+I wrote a unit test for pagination, which failed because the first page started with **Task 11** instead of **Task 1**.
+
+### Fix Implemented
 
 Changed:
 
@@ -32,7 +36,7 @@ Changed:
 const offset = page * limit;
 ```
 
-to
+to:
 
 ```javascript
 const offset = (page - 1) * limit;
@@ -40,24 +44,39 @@ const offset = (page - 1) * limit;
 
 ---
 
-## Bug 2: Status Filtering Uses Partial Match
+## Bug 2: Status Filtering Uses Partial Matching
 
-**Location**
+### Location
 `src/services/taskService.js`
 
-**Expected Behavior**
-Filtering by status should return only tasks with the exact status.
+### Expected Behavior
+Filtering by status should return only tasks whose status exactly matches the requested value.
 
-**Actual Behavior**
+### Actual Behavior
+
 The implementation uses:
 
 ```javascript
 t.status.includes(status)
 ```
 
-This allows partial matches instead of exact matches.
+This allows partial matches.
 
-**Suggested Fix**
+Example:
+
+```
+GET /tasks?status=do
+```
+
+returns tasks with status:
+
+```
+done
+```
+
+instead of rejecting the invalid status.
+
+### Suggested Fix
 
 ```javascript
 t.status === status
@@ -65,16 +84,30 @@ t.status === status
 
 ---
 
-## Bug 3: Completing a Task Changes Priority
+## Bug 3: Completing a Task Resets Priority
 
-**Location**
+### Location
 `src/services/taskService.js`
 
-**Expected Behavior**
-Completing a task should only update its status and completion time.
+### Expected Behavior
 
-**Actual Behavior**
-The task priority is always changed to `"medium"` when marking a task as complete.
+Completing a task should only update:
 
-**Suggested Fix**
-Keep the original priority unchanged.
+- status
+- completedAt
+
+The existing priority should remain unchanged.
+
+### Actual Behavior
+
+The implementation always changes the priority to:
+
+```javascript
+priority: "medium"
+```
+
+As a result, a **high-priority** or **low-priority** task loses its original priority after completion.
+
+### Suggested Fix
+
+Do not overwrite the existing priority when marking a task as complete.
